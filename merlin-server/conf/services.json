@@ -1,0 +1,22 @@
+{
+	"selfInstance": {
+		"address": "127.0.0.1",
+		"port": 7865
+	},
+	"services": {
+		"md-server#0": [
+			{
+				"address": "127.0.0.1",
+				"port": 7865
+			},
+			{
+				"address": "127.0.0.1",
+				"port": 7866
+			},
+			{
+				"address": "127.0.0.1",
+				"port": 7867
+			}
+		]
+	}
+}

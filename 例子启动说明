@@ -1,0 +1,23 @@
+例子是使用配置的方式设置分片和启动集群，3个server实例属于同1个分片，启动时会有一些报错，这些错误是重连失败的报错，全部启动后就没有报错了
+
+magic-server:
+启动类: com.magic.server.Main
+实例0，启动参数: -DconfPath=./conf -Djava.net.preferIPv4Stack=true -Dcom.magic.server.options.port=7865 -Dcom.magic.server.options.bitcaskDir=../.test-data/magic-bitcask-0-0
+实例1，启动参数: -DconfPath=./conf -Djava.net.preferIPv4Stack=true -Dcom.magic.server.options.port=7866 -Dcom.magic.server.options.bitcaskDir=../.test-data/magic-bitcask-0-1
+实例2，启动参数: -DconfPath=./conf -Djava.net.preferIPv4Stack=true -Dcom.magic.server.options.port=7867 -Dcom.magic.server.options.bitcaskDir=../.test-data/magic-bitcask-0-2
+
+magic-gateway（作为服务端）:
+启动类: com.magic.gateway.server.Main
+实例0，启动参数: -DconfPath=./conf -Dcom.magic.gateway.options.port=5612 -Dcom.magic.gateway.options.zkList=127.0.0.1:2222
+实例1，启动参数: -DconfPath=./conf -Dcom.magic.gateway.options.port=5613 -Dcom.magic.gateway.options.zkList=127.0.0.1:2222
+实例2，启动参数: -DconfPath=./conf -Dcom.magic.gateway.options.port=5614 -Dcom.magic.gateway.options.zkList=127.0.0.1:2222
+
+下面是测试用的代码：
+
+magic-gateway（直接作为客户端）:
+启动类: com.magic.client.gateway.test.Main
+启动参数: -DconfPath=./conf
+
+magic-gateway（magic-gateway作为服务端时的客户端）:
+启动类: com.magic.client.test.Main
+启动参数: -DconfPath=./conf
