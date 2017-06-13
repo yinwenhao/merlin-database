@@ -1,4 +1,6 @@
-package com.magic.bitcask.exception;
+package com.magic.server.exception;
+
+import com.magic.exception.BaseException;
 
 public class WrongMethodException extends BaseException {
 

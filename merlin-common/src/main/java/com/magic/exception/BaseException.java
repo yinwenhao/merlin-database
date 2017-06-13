@@ -1,4 +1,4 @@
-package com.magic.bitcask.exception;
+package com.magic.exception;
 
 public class BaseException extends Exception {
 

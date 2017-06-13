@@ -1,5 +1,7 @@
 package com.magic.bitcask.exception;
 
+import com.magic.exception.BaseException;
+
 public class IterException extends BaseException {
 
 	/**

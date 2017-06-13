@@ -31,6 +31,14 @@ public class GatewayDispatcherImpl implements GatewayDispatcher {
 			}
 			break;
 		case Constants.SET:
+			if (request.getKey() == null) {
+				response.setError(GatewayResponse.KEY_ERROR);
+				return response;
+			}
+			if (request.getValue() == null) {
+				response.setError(GatewayResponse.VALUE_ERROR);
+				return response;
+			}
 			client.setWithExpire(request.getKey(), request.getValue(), request.getExpire());
 			break;
 		case Constants.DELETE:
@@ -42,6 +50,7 @@ public class GatewayDispatcherImpl implements GatewayDispatcher {
 			break;
 		default:
 			response.setError(GatewayResponse.METHOD_ERROR);
+			return response;
 		}
 		return response;
 	}

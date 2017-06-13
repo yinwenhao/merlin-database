@@ -3,7 +3,7 @@ package com.magic.bitcask.core;
 import java.io.IOException;
 
 import com.magic.bitcask.entity.BitCaskValue;
-import com.magic.bitcask.exception.BaseException;
+import com.magic.exception.BaseException;
 
 public interface BitCask {
 

@@ -6,6 +6,8 @@ public class GatewayResponse {
 	public static final int NOT_EXIST_ERROR = 10;
 	public static final int EXPIRE_ERROR = 20;
 	public static final int METHOD_ERROR = 30;
+	public static final int KEY_ERROR = 40;
+	public static final int VALUE_ERROR = 50;
 
 	private String guid;
 

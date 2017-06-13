@@ -2,10 +2,12 @@ package com.magic.server.dispatcher;
 
 import com.magic.bitcask.core.BitCask;
 import com.magic.bitcask.entity.BitCaskValue;
-import com.magic.bitcask.exception.WrongMethodException;
 import com.magic.constants.Constants;
 import com.magic.netty.request.Request;
 import com.magic.netty.request.Response;
+import com.magic.server.exception.WrongKeyException;
+import com.magic.server.exception.WrongMethodException;
+import com.magic.server.exception.WrongValueException;
 import com.magic.synchronize.Synchronizer;
 
 public class DispatcherImpl implements Dispatcher {
@@ -35,8 +37,13 @@ public class DispatcherImpl implements Dispatcher {
 			response.setValue(Constants.RESPONSE_OK);
 			break;
 		case Constants.SET:
-			bitcask.setWithExpire(request.getKey(), request.getValue(), request.getVersion(),
-					request.getExpire());
+			if (request.getKey() == null) {
+				throw new WrongKeyException();
+			}
+			if (request.getValue() == null) {
+				throw new WrongValueException();
+			}
+			bitcask.setWithExpire(request.getKey(), request.getValue(), request.getVersion(), request.getExpire());
 			response.setValue(Constants.RESPONSE_OK);
 			response.setVersion(request.getVersion());
 			break;
