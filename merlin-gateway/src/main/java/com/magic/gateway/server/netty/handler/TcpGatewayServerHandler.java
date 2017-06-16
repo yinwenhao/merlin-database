@@ -17,13 +17,18 @@ public class TcpGatewayServerHandler extends ChannelInboundHandlerAdapter {
 
 	private final Logger log = LoggerFactory.getLogger(getClass());
 
-	private Executor executor = ExecutorFactory.createRequestExecutorAndInit();
+	private Executor executor;
+
+	public TcpGatewayServerHandler(int threadPoolSize) {
+		this.executor = ExecutorFactory.createRequestExecutorAndInit(threadPoolSize);
+	}
 
 	@Override
 	public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
 		GatewayRequest request = (GatewayRequest) msg;
 		if (log.isDebugEnabled()) {
-			log.debug("recieve GatewayRequest. method:{} key:{} value:{}", request.getMethod(), request.getKey(), request.getValue());
+			log.debug("recieve GatewayRequest. method:{} key:{} value:{}", request.getMethod(), request.getKey(),
+					request.getValue());
 		}
 		GatewayRequestTask task = new GatewayRequestTask(request, ctx);
 		executor.execute(task);

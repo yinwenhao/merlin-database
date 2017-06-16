@@ -3,7 +3,7 @@ package com.magic.server.netty.handler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.magic.executor.Executor;
+import com.magic.executor.TaskExecutor;
 import com.magic.executor.factory.ExecutorFactory;
 import com.magic.netty.request.Request;
 import com.magic.server.dispatcher.task.RequestTask;
@@ -17,7 +17,11 @@ public class TcpServerHandler extends ChannelInboundHandlerAdapter {
 
 	private final Logger log = LoggerFactory.getLogger(getClass());
 
-	private Executor executor = ExecutorFactory.createRequestExecutorAndInit();
+	private TaskExecutor executor;
+
+	public TcpServerHandler(int threadPoolSize) {
+		this.executor = ExecutorFactory.createRequestTaskExecutorAndInit(threadPoolSize);
+	}
 
 	@Override
 	public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {

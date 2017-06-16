@@ -72,4 +72,19 @@ public class BitCaskKeydirImpl implements BitCaskKeydir {
 		}
 	}
 
+	@Override
+	public void checkExpire(String key) {
+		Lock writeLock = rwl.writeLock();
+		writeLock.lock();
+		try {
+			BitCaskKey old = keyDir.get(key);
+			if (old.getExpire() > 0 && System.currentTimeMillis() >= old.getExpire()) {
+				// 数据过期了
+				keyDir.remove(key);
+			}
+		} finally {
+			writeLock.unlock();
+		}
+	}
+
 }

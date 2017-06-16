@@ -67,7 +67,7 @@ public class NettyServer implements NetServer {
 		ChannelOutboundHandlerAdapter encodeHandler = new EncodeWithLengthFieldHandler(serialFactory);
 		ChannelInboundHandlerAdapter decodeHandler = new DecodeWithLengthFieldHandler(serialFactory,
 				GatewayRequest.class);
-		TcpGatewayServerHandler tcpServerHandler = new TcpGatewayServerHandler();
+		TcpGatewayServerHandler tcpServerHandler = new TcpGatewayServerHandler(this.opts.threadPoolSize);
 		MyCloseHandler myCloseHandler = new MyCloseHandler();
 		try {
 			b = new ServerBootstrap();

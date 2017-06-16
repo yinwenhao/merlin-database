@@ -1,7 +1,5 @@
 package com.magic.bitcask.entity;
 
-import com.magic.bitcask.constants.Constants;
-
 public class BitCaskKey {
 
 	private int fileId;
@@ -27,15 +25,6 @@ public class BitCaskKey {
 
 	public boolean isNewerThan(BitCaskKey old) {
 		return old.getVersion() < this.getVersion();
-	}
-
-	/**
-	 * 插入数据时的时间，毫秒
-	 * 
-	 * @return
-	 */
-	public long getCreateTime() {
-		return version >> Constants.TIME_SHIFT_FOR_VERSION;
 	}
 
 	public int getFileId() {

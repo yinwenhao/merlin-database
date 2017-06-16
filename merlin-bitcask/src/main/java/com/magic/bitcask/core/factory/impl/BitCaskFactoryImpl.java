@@ -45,10 +45,8 @@ public class BitCaskFactoryImpl implements BitCaskFactory {
 		Util.ensuredir(dbDir);
 		log.info("bitcask using dir: " + dbDir.getAbsolutePath());
 
-		if (opts.readWrite) {
-			BitCaskLock.deleteStaleLock(Type.WRITE, dbDir);
-			result.setWriteFile(FRESH_FILE);
-		}
+		BitCaskLock.deleteStaleLock(Type.WRITE, dbDir);
+		result.setWriteFile(FRESH_FILE);
 
 		result.setDirname(dbDir);
 

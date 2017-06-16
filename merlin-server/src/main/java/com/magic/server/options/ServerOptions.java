@@ -14,6 +14,8 @@ public class ServerOptions {
 	public int shardIndex = 0; // 分片id，从0开始，依次加一
 	public int port = 7865; // 服务端口
 
+	public int threadPoolSize = 4; // 业务处理线程池的大小
+
 	public String zkBasePath = "/magic/database";
 
 	public String zkList = "10.128.8.57:2181";

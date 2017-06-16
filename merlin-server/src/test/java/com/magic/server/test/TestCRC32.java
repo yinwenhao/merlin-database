@@ -1,4 +1,4 @@
-package com.magic;
+package com.magic.server.test;
 
 import java.util.zip.CRC32;
 

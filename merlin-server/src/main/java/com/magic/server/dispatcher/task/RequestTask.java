@@ -3,13 +3,15 @@ package com.magic.server.dispatcher.task;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.magic.executor.task.Task;
 import com.magic.netty.request.Request;
 import com.magic.netty.request.Response;
 import com.magic.server.dispatcher.Dispatcher;
+import com.magic.util.CRC32;
 
 import io.netty.channel.ChannelHandlerContext;
 
-public class RequestTask implements Runnable {
+public class RequestTask implements Task {
 
 	private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -19,9 +21,16 @@ public class RequestTask implements Runnable {
 
 	private Request request;
 
+	private int threadIndex;
+
 	public RequestTask(Request request, ChannelHandlerContext ctx) {
 		this.request = request;
 		this.ctx = ctx;
+
+		CRC32 crc32 = new CRC32();
+		crc32.update(this.request.getKey());
+		this.threadIndex = crc32.getValue();
+		log.debug("RequestTask key:{} threadIndex:{}", this.request.getKey(), this.threadIndex);
 	}
 
 	@Override
@@ -52,6 +61,11 @@ public class RequestTask implements Runnable {
 
 	public static void setDispatcher(Dispatcher dispatcher) {
 		RequestTask.dispatcher = dispatcher;
+	}
+
+	@Override
+	public int getThreadIndex() {
+		return this.threadIndex;
 	}
 
 }

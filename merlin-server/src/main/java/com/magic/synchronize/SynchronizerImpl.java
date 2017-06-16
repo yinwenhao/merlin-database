@@ -90,7 +90,8 @@ public class SynchronizerImpl implements Synchronizer, Runnable {
 
 	@Override
 	public void set(String key, String value, long version, long expire) throws Exception {
-		bitcask.setWithExpire(key, value, version, expire);
+		log.debug("set key:{} value:{} version:{} expire:{}", key, value, version, expire);
+		bitcask.innerSetWithExpire(key, value, version, expire);
 	}
 
 	@Override

@@ -14,4 +14,6 @@ public interface BitCaskKeydir {
 
 	public void markReady();
 
+	public void checkExpire(String key);
+
 }

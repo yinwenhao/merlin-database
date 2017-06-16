@@ -17,7 +17,6 @@ import java.util.regex.Pattern;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.magic.bitcask.constants.Constants;
 import com.magic.bitcask.core.BitCaskFile;
 import com.magic.bitcask.core.BitCaskHint;
 import com.magic.bitcask.core.BitCaskKeydir;
@@ -28,7 +27,9 @@ import com.magic.bitcask.core.factory.BitCaskHintFactory;
 import com.magic.bitcask.entity.BitCaskKey;
 import com.magic.bitcask.entity.BitCaskValue;
 import com.magic.bitcask.enums.Type;
+import com.magic.bitcask.exception.ReadOnlyException;
 import com.magic.bitcask.options.BitCaskOptions;
+import com.magic.constants.Constants;
 import com.magic.exception.BaseException;
 import com.magic.synchronize.merkletree.MerkleTreeNode;
 import com.magic.timer.ScheduledExecutorServiceTimer;
@@ -60,9 +61,11 @@ public class BitCaskImpl implements BitCaskServer, Runnable {
 
 	private BitCaskOptions bitCaskOptions;
 
+	private ReadOnlyException roe = new ReadOnlyException();
+
 	public void freshInit(File file) throws Exception {
 		if (writeFile == null) {
-			throw new IOException("read only");
+			throw new IOException("no write file");
 		}
 		BitCaskLock wl = BitCaskLock.acquire(Type.WRITE, dirname);
 		if (wl == null) {
@@ -82,22 +85,22 @@ public class BitCaskImpl implements BitCaskServer, Runnable {
 		this.writeFile = nwf;
 	}
 
-	@Override
-	public void set(String key, String value, long version) throws IOException, BaseException {
-		setWithExpire(key, value, version, Constants.EXPIRE_TIME_DEFAULT);
-	}
-
-	@Override
-	public void setWithExpire(String key, String value, long version, long expire)
+	// 这里需要处理并发问题，或者保证相同的key都在同一个(或保证时序的不同线程)线程中
+	private void doSetWithExpire(String key, String value, long version, long expire)
 			throws IOException, BaseException {
 		if (writeFile == null) {
-			throw new IOException("read only");
+			throw new IOException("no write file");
+		}
+		if (log.isDebugEnabled()) {
+			Thread current = Thread.currentThread();
+			log.debug("thread name:{} hashcode:{}", current.getName(), current.hashCode());
 		}
 		BitCaskKey bck = keyManager.get(key);
 		if (bck != null && bck.getVersion() >= version) {
 			// 目前版本号较新，不需要更新
 			return;
 		}
+		log.debug("keyManager pass" + key);
 		if (writeFile.needCreateNewFile(key, value, maxFileSize)) {
 			synchronized (this) {
 				if (writeFile.needCreateNewFile(key, value, maxFileSize)) {
@@ -106,9 +109,32 @@ public class BitCaskImpl implements BitCaskServer, Runnable {
 				}
 			}
 		}
+		log.debug("before write key:{} value:{} version:{} expire:{}", key, value, version, expire);
 		BitCaskKey entry = writeFile.write(key, value, version, expire);
+		log.debug("after write key:{} value:{} version:{} expire:{}", key, value, version, expire);
 		keyManager.put(key, entry);
+		log.debug("after keyManager.put key:" + key);
 		merkleTreeRoot.addOrUpdateLeaf(key, entry.getCrc32());
+		log.debug("after merkleTreeRoot.addOrUpdateLeaf key:" + key);
+	}
+
+	@Override
+	public void innerSetWithExpire(String key, String value, long version, long expire)
+			throws IOException, BaseException {
+		doSetWithExpire(key, value, version, expire);
+	}
+
+	@Override
+	public void set(String key, String value, long version) throws IOException, BaseException {
+		setWithExpire(key, value, version, Constants.EXPIRE_TIME_DEFAULT);
+	}
+
+	@Override
+	public void setWithExpire(String key, String value, long version, long expire) throws IOException, BaseException {
+		if (!bitCaskOptions.readWrite) {
+			throw roe;
+		}
+		doSetWithExpire(key, value, version, expire);
 	}
 
 	private BitCaskFile createNewWriteFileAndDelayToCloseOldWriteFile(final BitCaskFile oldWriteFile)
@@ -155,6 +181,7 @@ public class BitCaskImpl implements BitCaskServer, Runnable {
 		if (isRead) {
 			if (entry.getExpire() > 0 && System.currentTimeMillis() >= entry.getExpire()) {
 				// 数据过期了
+				keyManager.checkExpire(key);
 				return new BitCaskValue(key);
 			}
 		}
@@ -384,7 +411,8 @@ public class BitCaskImpl implements BitCaskServer, Runnable {
 							// 是这个key的最新值，写到新存储文件中，并更新索引
 							BitCaskFile writeFile = nwf;
 							BitCaskHint writeHint = bch;
-							if (writeFile.needCreateNewFile(bb[1].capacity(), bb[2].capacity(), bitCaskOptions.maxFileSize)) {
+							if (writeFile.needCreateNewFile(bb[1].capacity(), bb[2].capacity(),
+									bitCaskOptions.maxFileSize)) {
 								// 延迟关闭writeFile的写通道
 								writeFile = createNewWriteFileAndDelayToCloseOldWriteFile(writeFile);
 								// 直接关闭writeHint
@@ -426,8 +454,8 @@ public class BitCaskImpl implements BitCaskServer, Runnable {
 		if (System.currentTimeMillis() > cal.getTimeInMillis()) {
 			cal.add(Calendar.DAY_OF_YEAR, 1);
 		}
-		ScheduledExecutorServiceTimer.getInstance().scheduleAtFixedRate(this, cal.getTime(), bitCaskOptions.periodDayToMerge,
-				TimeUnit.DAYS);
+		ScheduledExecutorServiceTimer.getInstance().scheduleAtFixedRate(this, cal.getTime(),
+				bitCaskOptions.periodDayToMerge, TimeUnit.DAYS);
 
 		// 这里是为了方便测试改的代码，记得改回去！！！！！！！！！
 		// ScheduledExecutorServiceTimer.getInstance().scheduleAtFixedRate(this,

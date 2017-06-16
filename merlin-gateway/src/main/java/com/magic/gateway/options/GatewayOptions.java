@@ -10,6 +10,8 @@ public class GatewayOptions {
 
 	public String zkBasePath = "/magic/database";
 
+	public int threadPoolSize = 4; // 业务处理线程池的大小
+
 	public String zkList = "10.128.8.57:2181";
 	public int baseSleepTimeMs = 1000;
 	public int maxRetries = 3; // zk注册服务时最大重试次数
