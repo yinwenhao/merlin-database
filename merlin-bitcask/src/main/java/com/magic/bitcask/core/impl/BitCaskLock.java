@@ -8,12 +8,13 @@ import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.FileAlreadyExistsException;
 
-import com.magic.bitcask.core.BitCaskFile;
 import com.magic.bitcask.enums.Stale;
 import com.magic.bitcask.enums.Type;
 import com.magic.util.OS;
 
 public class BitCaskLock {
+
+	private static int selfPid = 0;
 
 	private RandomAccessFile file;
 
@@ -22,6 +23,9 @@ public class BitCaskLock {
 	private File filename;
 
 	private BitCaskLock(RandomAccessFile file, File filename, boolean isWriteLock) {
+		if (selfPid == 0) {
+			selfPid = OS.getpid();
+		}
 		this.file = file;
 		this.filename = filename;
 		this.isWriteLock = isWriteLock;
@@ -31,55 +35,12 @@ public class BitCaskLock {
 		return filename.getAbsolutePath();
 	}
 
-	public static File readActivefile(Type type, File dirname) {
-		File lockFilename = lockFilename(type, dirname);
-		try {
-			BitCaskLock lock = lockAcquire(lockFilename, false);
-
-			try {
-				String contents = lock.readLockData();
-
-				int idx = contents.indexOf(' ');
-				if (idx != -1) {
-					String rest = contents.substring(idx + 1);
-
-					int end = rest.indexOf('\n');
-					if (end != -1) {
-						String path = rest.substring(0, end);
-						return new File(path);
-					}
-				}
-
-			} finally {
-				lock.release();
-			}
-
-		} catch (Exception e) {
-		}
-
-		return null;
-
-	}
-
-	public void writeActivefile(Type type, File dirname) throws IOException {
-		writeActivefile(lockFilename(type, dirname));
-	}
-
-	public void writeActivefile(BitCaskFile file) throws IOException {
-		writeActivefile(file.getFile());
-	}
-
-	private void writeActivefile(File activeFilename) throws IOException {
-		String lockContents = Integer.toString(OS.getpid()) + " " + activeFilename.getPath() + "\n";
-		writeData(lockContents);
-	}
-
 	public static BitCaskLock acquire(Type type, File dirname) throws IOException {
 		File lockFilename = lockFilename(type, dirname);
 		try {
 			BitCaskLock lock = lockAcquire(lockFilename, true);
 
-			String lockContents = Integer.toString(OS.getpid()) + " \n";
+			String lockContents = Integer.toString(selfPid);
 			lock.writeData(lockContents);
 
 			return lock;
@@ -123,11 +84,11 @@ public class BitCaskLock {
 
 			int pid = l.readLockDataPid();
 
-			if (OS.pidExists(pid)) {
-				return Stale.NOT_STALE;
-			} else {
+			if (OS.checkPidIsSelf(pid)) {
 				lockFilename.delete();
 				return Stale.OK;
+			} else {
+				return Stale.NOT_STALE;
 			}
 
 		} catch (IOException e) {
@@ -140,13 +101,7 @@ public class BitCaskLock {
 
 	private int readLockDataPid() throws IOException {
 		String data = readLockData();
-
-		int idx = data.indexOf(' ');
-		if (idx != -1) {
-			return Integer.parseInt(data.substring(0, idx));
-		}
-
-		throw new IOException();
+		return Integer.parseInt(data);
 	}
 
 	private String readLockData() throws IOException {

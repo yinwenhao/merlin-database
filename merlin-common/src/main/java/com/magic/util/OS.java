@@ -7,17 +7,27 @@ import java.util.regex.Pattern;
 
 public class OS {
 
+	private static int selfPid = 0;
+
 	public static int getpid() {
-
-		RuntimeMXBean rtb = ManagementFactory.getRuntimeMXBean();
-		String processName = rtb.getName();
-		Integer pid = tryPattern1(processName);
-
-		if (pid == null) {
-			throw new UnsupportedOperationException("cannot get pid");
+		if (selfPid != 0) {
+			return selfPid;
 		}
+		synchronized (OS.class) {
+			if (selfPid != 0) {
+				return selfPid;
+			}
+			RuntimeMXBean rtb = ManagementFactory.getRuntimeMXBean();
+			String processName = rtb.getName();
+			Integer pid = tryPattern1(processName);
 
-		return pid.intValue();
+			if (pid == null) {
+				throw new UnsupportedOperationException("cannot get pid");
+			}
+
+			selfPid = pid.intValue();
+			return selfPid;
+		}
 	}
 
 	/**
@@ -42,8 +52,7 @@ public class OS {
 
 	}
 
-	public static boolean pidExists(int pid) {
-		// TODO: when_how
-		return false;
+	public static boolean checkPidIsSelf(int pid) {
+		return pid == selfPid;
 	}
 }

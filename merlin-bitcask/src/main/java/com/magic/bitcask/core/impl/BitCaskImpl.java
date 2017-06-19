@@ -80,7 +80,6 @@ public class BitCaskImpl implements BitCaskServer, Runnable {
 			nwf = bitCaskFileFactory.openBitCaskFileForWrite(file);
 		}
 		readFiles.put(nwf.getFile(), nwf);
-		wl.writeActivefile(nwf);
 		this.writeLock = wl;
 		this.writeFile = nwf;
 	}
@@ -105,7 +104,6 @@ public class BitCaskImpl implements BitCaskServer, Runnable {
 			synchronized (this) {
 				if (writeFile.needCreateNewFile(key, value, maxFileSize)) {
 					writeFile = createNewWriteFileAndDelayToCloseOldWriteFile(writeFile);
-					writeLock.writeActivefile(writeFile);
 				}
 			}
 		}
@@ -243,23 +241,15 @@ public class BitCaskImpl implements BitCaskServer, Runnable {
 	}
 
 	public File[] readableFiles() {
-
-		final File writing_file = BitCaskLock.readActivefile(Type.WRITE, dirname);
-		final File merging_file = BitCaskLock.readActivefile(Type.MERGE, dirname);
-
-		return listDataFiles(writing_file, merging_file);
+		return listDataFiles();
 	}
 
 	private static Pattern DATA_FILE = Pattern.compile("[0-9]+.bitcask.data");
 
-	private File[] listDataFiles(final File writing_file, final File merging_file) {
+	private File[] listDataFiles() {
 		File[] files = dirname.listFiles(new FileFilter() {
 			@Override
 			public boolean accept(File f) {
-				if (f == writing_file || f == merging_file) {
-					return false;
-				}
-
 				return DATA_FILE.matcher(f.getName()).matches();
 			}
 		});

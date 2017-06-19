@@ -1,6 +1,7 @@
 package com.magic.bitcask.core.factory.impl;
 
 import java.io.File;
+import java.io.IOException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,6 +19,7 @@ import com.magic.bitcask.core.impl.BitCaskFileImpl;
 import com.magic.bitcask.core.impl.BitCaskImpl;
 import com.magic.bitcask.core.impl.BitCaskLock;
 import com.magic.bitcask.entity.BitCaskKey;
+import com.magic.bitcask.enums.Stale;
 import com.magic.bitcask.enums.Type;
 import com.magic.bitcask.options.BitCaskOptions;
 import com.magic.synchronize.merkletree.MerkleTreeNode;
@@ -45,7 +47,11 @@ public class BitCaskFactoryImpl implements BitCaskFactory {
 		Util.ensuredir(dbDir);
 		log.info("bitcask using dir: " + dbDir.getAbsolutePath());
 
-		BitCaskLock.deleteStaleLock(Type.WRITE, dbDir);
+		Stale stale = BitCaskLock.deleteStaleLock(Type.WRITE, dbDir);
+		if (stale != Stale.OK) {
+			// 已经有进程拿到文件锁了
+			throw new IOException("failed to get write lock.");
+		}
 		result.setWriteFile(FRESH_FILE);
 
 		result.setDirname(dbDir);

@@ -74,13 +74,18 @@ public class ServerImpl implements Server, Runnable {
 	}
 
 	@Override
+	public void close() throws Exception {
+		register.unregist();
+		synchronizer.shutdown();
+		timer.shutdown();
+		netServer.shutdown();
+		bitcask.close();
+	}
+
+	@Override
 	public void run() {
 		try {
-			register.unregist();
-			synchronizer.shutdown();
-			timer.shutdown();
-			netServer.shutdown();
-			bitcask.close();
+			this.close();
 		} catch (Exception e) {
 			log.error("server shutdown error", e);
 		}
