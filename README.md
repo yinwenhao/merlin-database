@@ -1,5 +1,5 @@
 # magic-database
-一个高性能、高可用，强一致的key-value存储，数据落盘，写比读快。
+一个高性能、高可用、可扩展、强一致的key-value存储，数据落盘，写比读快。
 
 目前全部使用java实现，底层使用bitcask策略存储。整个系统分为server和gateway，gateway负责路由请求、分片、根据NWR策略的具体配置可以实现读写强一致。
 
