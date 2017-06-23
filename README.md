@@ -10,7 +10,7 @@
 部署gateway的机器系统时间需要尽量一致
 
 # 客户端
-java: [github.com/yinwenhao/merlin-client](https://github.com/yinwenhao/merlin-client)
-go: [github.com/yinwenhao/merlin-client-go](https://github.com/yinwenhao/merlin-client-go)
+* java: [github.com/yinwenhao/merlin-client](https://github.com/yinwenhao/merlin-client)
+* go: [github.com/yinwenhao/merlin-client-go](https://github.com/yinwenhao/merlin-client-go)
 
 有问题请联系：yinwenhao_89@hotmail.com
